@@ -29,24 +29,34 @@ class CategoryController extends Controller
         }
     }
 
-    public function store(Request $request)
+    public function store(Request $request, $id)
     {
         try {
             $validated = $request->validate([
-                'board_id' => 'required|exists:boards,id',
                 'name' => 'required|string|max:100',
                 'order' => 'nullable|integer',
             ]);
 
-            $board = Board::findOrFail($validated['board_id']);
+            $board = Board::findOrFail($id);
 
-            $category = Category::create($validated);
+            if ($board) {
+                $data = [
+                    'board_id' => $id,
+                    'name' => $validated['name'],
+                    'order' => isset($validated['order']) ? $validated['order'] : null
+                ];
 
-            return response()->json($category, 201);
+                $category = Category::create($data);
+
+                return response()->json($category, 201);
+            } else {
+                return response()->json(['error' => 'Erro de validação', 'details' => 'Quadro não existe!'], 422);
+            }
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['error' => 'Erro de validação', 'details' => $e->errors()], 422);
         } catch (Throwable $e) {
-            return response()->json(['error' => 'Erro ao criar categoria'], 500);
+            return response()->json(['error' => 'Erro ao criar categoria', 'e' => $e->getMessage()], 500);
         }
     }
 

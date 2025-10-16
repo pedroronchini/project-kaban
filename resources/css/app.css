@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.cursor-pointer { cursor: grab; }
+.bg-light.sortable-ghost {
+  opacity: 0.6;
+  transform: rotate(3deg);
+}
