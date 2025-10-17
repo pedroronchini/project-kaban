@@ -95,6 +95,8 @@ $(function () {
         // Carrega os dados daquele board
         boards.loadBoard(boardId);
 
+
+
         // Abre o modal de criar a tarefa
         $(document).on('click', '.btn-new-task', function () {
             const id = $(this).data('card-id');
@@ -106,6 +108,7 @@ $(function () {
 
         // Abre o modal de editar a tarefa
         $(document).on('click', '.task-item', function () {
+
             const id = $(this).data('task-id');
 
             boards.getCategories(boardId);
@@ -347,7 +350,7 @@ const boards = {
                     <div class="container-fluid py-4" style="min-height: 100vh;">
                         <div class="d-flex flex-row flex-nowrap overflow-auto gap-3 px-2">
                             ${categories.map(category => {
-                                $('#createTaskForm').attr('data-order_task', category.tasks.length);
+                                $('#createTaskForm').attr('data-order_task', 0);
 
                                 return `
                                     <div class="card shadow-lg flex-shrink-0 bg-white" style="width: 18rem; border-radius: 1rem;">
@@ -374,7 +377,7 @@ const boards = {
                                         <div class="card-body p-2 task-list" style="max-height: 70vh; overflow-y: auto;" data-category-id="${category.id}">
                                             ${category.tasks.map(task =>  `
                                                     <div class="card mb-2 border-0 shadow-sm cursor-pointer transition-all duration-200 task-item" data-task-id="${task.id}">
-                                                        <div class="card-body py-2 px-3">
+                                                        <div class="task-content card-body py-2 px-3">
                                                             <h6 class="fw-semibold mb-1">${task.title}</h6>
                                                             ${task.description && task.description != null ? `<p class="text-muted small mb-0">${task.description}</p>` : ''}
                                                         </div>
@@ -395,11 +398,12 @@ const boards = {
                 `;
 
                 $('#kanbanBoardContainer').html(html);
-                activateDrag();
             } else {
                 $('#kanbanBoardContainer').html('<p class="text-gray-500 p-4">Nenhuma categoria encontrada</p>');
                 $('#kanbanBoardContainer').attr("data-next_order", 0);
             }
+
+            boards.activateSortable();
         });
     },
 
@@ -418,5 +422,60 @@ const boards = {
 
             $('#taskCategory').html(html);
         });
+    },
+
+    activateSortable: () => {
+        // flag para indicar que houve drag
+        let wasDragged = false;
+
+        // Configurar o arrastar e soltar (drag & drop) com Jquery UI Sortable
+        $('.task-list').sortable({
+            connectWith: ".task-list",
+            placeholder: "task-placeholder",
+            items: ".task-item",
+            revert: true,
+            start: function(event, ui) {
+                wasDragged = true;
+                ui.item.addClass("dragging");
+            },
+            stop: function(event, ui) {
+                ui.item.removeClass("dragging");
+
+                // mantemos wasDragged true por um curto período para evitar click após drop
+                setTimeout(function() {
+                    wasDragged = false;
+                }, 50);
+
+                const taskId = ui.item.data('task-id');
+                const newCategoryId = ui.item.closest('.task-list').data('category-id');
+
+                // Pegar nova ordem das tasks dentro dessa categoria
+                const order = [];
+                ui.item.closest('.task-list').children('.task-item').each(function(index) {
+                    order.push({
+                        id: $(this).data('task-id'),
+                        position: index + 1
+                    });
+                });
+
+                // Enviar atualização via AJAX
+                $.ajax({
+                    url: `/api/tasks/${taskId}/move`,
+                    method: 'PUT',
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        category_id: newCategoryId,
+                        order: order
+                    }),
+                    success: function() {
+
+                    },
+                    error: function(xhr) {
+                        console.error("Erro ao mover task:", xhr.responseText);
+                        alert("Erro ao mover tarefa.");
+                    }
+                });
+            }
+        }).disableSelection();
     }
 }

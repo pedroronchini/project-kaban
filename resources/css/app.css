@@ -2,8 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-.cursor-pointer { cursor: grab; }
-.bg-light.sortable-ghost {
-  opacity: 0.6;
-  transform: rotate(3deg);
+.task-placeholder {
+    border: 2px dashed #0d6efd;
+    margin-bottom: 10px;
+    height: 50px;
+    border-radius: 6px;
+}
+.task-item,
+.task-item * {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* estilo do handle */
+.drag-handle {
+  cursor: grab;
+  padding: 0.25rem 0.35rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* feedback visual enquanto arrasta */
+.task-item.dragging {
+    opacity: 0.6;
+    transform: rotate(2deg);
 }

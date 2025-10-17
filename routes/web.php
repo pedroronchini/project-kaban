@@ -56,6 +56,7 @@ Route::middleware('auth')->prefix('api')->group(function () {
     Route::post('/categories/{category}/tasks', [TaskController::class, 'store']);
     Route::get('/tasks/{task}', [TaskController::class, 'show']);
     Route::put('/tasks/{task}', [TaskController::class, 'update']);
+    Route::put('/tasks/{task}/move', [TaskController::class, 'move']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
 });
 

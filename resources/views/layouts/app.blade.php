@@ -17,12 +17,7 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
 
-        <!-- Scripts -->
-        @if ($routeName == 'register' || $routeName == 'login')
-            @vite(['resources/css/app.css', 'resources/js/app.js'])
-        @else
-            @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/scripts.js'])
-        @endif
+
 
         <!-- Bootstrap & jQuery via CDN -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -30,6 +25,12 @@
         <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+        <!-- Scripts -->
+        @if ($routeName == 'register' || $routeName == 'login')
+            @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @else
+            @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/scripts.js'])
+        @endif
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">

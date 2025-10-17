@@ -94,23 +94,26 @@ class TaskController extends Controller
         }
     }
 
-    public function reorder(Request $request)
+    public function move(Request $request, $id)
     {
         try {
-            $validated = $request->validate([
-                'category_id' => 'required|exists:categories,id',
-                'order' => 'required|array',
-                'order.*' => 'integer|exists:tasks,id',
-            ]);
+            $task = Task::findOrFail($id);
 
-            foreach ($validated['order'] as $index => $taskId) {
-                Task::where('id', $taskId)->update([
-                    'category_id' => $validated['category_id'],
-                    'order' => $index,
-                ]);
+            if ($task) {
+                // Atualiza a categoria da tarefa
+                $task->category_id = $request->category_id;
+                $task->save();
+
+                // Atualiza a ordem de todas as tarefas enviadas
+                if ($request->has('order')) {
+                    foreach ($request->order as $item) {
+                        Task::where('id', $item['id'])
+                            ->update(['order' => $item['position']]);
+                    }
+                }
+
+                return response()->json(['success' => true], 200);
             }
-
-            return response()->json(['message' => 'Tarefas reordenadas com sucesso'], 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['error' => 'Erro de validação', 'details' => $e->errors()], 422);
         } catch (Throwable $e) {
