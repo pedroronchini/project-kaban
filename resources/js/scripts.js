@@ -13,7 +13,7 @@ $(function () {
         boards.loadBoards();
 
         // Ao clicar editar abre o modal
-        $(document).on('click', '.btn-edit-board', function() {
+        $(document).on('click', '.btn-edit-board', function () {
             const id = $(this).data('id');
             const name = $(this).data('name');
             const description = $(this).data('description');
@@ -26,7 +26,7 @@ $(function () {
         });
 
         // Ao clicar em excluir, abre o confirm
-        $(document).on('click', '.btn-delete-board', function() {
+        $(document).on('click', '.btn-delete-board', function () {
             if (!confirm('Tem certeza que deseja excluir este quadro?')) return;
 
             const id = $(this).data('id');
@@ -63,7 +63,7 @@ $(function () {
         });
 
         // Edita o quadro
-        $('#editBoardForm').on('submit', function(e) {
+        $('#editBoardForm').on('submit', function (e) {
             e.preventDefault();
             const id = $('#editBoardId').val();
             const name = $('#editBoardName').val();
@@ -95,6 +95,63 @@ $(function () {
         // Carrega os dados daquele board
         boards.loadBoard(boardId);
 
+        // Abre o modal de criar a tarefa
+        $(document).on('click', '.btn-new-task', function () {
+            const id = $(this).data('card-id');
+
+            $('#createTaskForm').attr('data-id_category', id);
+
+            $('#createTaskModal').modal('show');
+        });
+
+        // Abre o modal de editar a tarefa
+        $(document).on('click', '.btn-edit-task', function () {
+            const id = $(this).data('id_category');
+            const title = $(this).data('task_title');
+            const description = $(this).data('task_description');
+
+
+            $('#idTaskEdit').val(id);
+            $('#editTaskTitle').val(title);
+            $('#editTaskDescription').val(description);
+
+            $('#editTaskModal').modal('show');
+        });
+
+        // Abre o modal de editar a coluna|categoria
+        $(document).on('click', '.btn-edit-category', function () {
+            const id =  $(this).data('id_category');
+            const name = $(this).data('name_category');
+
+            $('#editIdCategory').val(id);
+            $('#editCategoryName').val(name);
+
+            $('#editCategoryModal').modal('show');
+        });
+
+        // Ao clicar em excluir coluna|categoria abre o confirm
+        $(document).on('click', '.btn-delete-category', function () {
+            if (!confirm('Tem certeza que deseja excluir esta coluna?')) return;
+
+            const id = $(this).data('id_category');
+
+            $.ajax({
+                url: `/api/categories/${id}`,
+                method: 'DELETE',
+                success: () => {
+                    boards.loadBoard(boardId);
+                },
+                error: (xhr) => {
+                    alert('Erro ao excluir coluna');
+                    console.error(xhr.responseText);
+                }
+            })
+        });
+
+        // Ao clicar em excluir tarefa abre o confirm
+        $(document).on('click', '', function () {});
+
+        // Cria as categorias|colunas
         $('#createColumnForm').on('submit', function (e) {
             e.preventDefault();
 
@@ -114,17 +171,48 @@ $(function () {
         });
 
         // Criar task
-        $('#kanbanBoardContainer').on('submit', '.createTaskForm', function (e) {
+        $('#createTaskForm').on('submit', function (e) {
             e.preventDefault();
 
-            const $f = $(this);
-            const columnId = $f.data('column-id');
-            const title = $f.find('.taskTitle').val().trim();
+            const category_id = $(this).data('id_category');
+            const title = $('#taskTitle').val();
+            const description = $('#taskDescription').val();
+            const order = $(this).data('order_task');
 
             if (!title) return;
 
-            $.post(`/api/columns/${columnId}/tasks`, { title })
-                .done(() => boards.loadBoard(boardId));
+            $.post(`/api/categories/${category_id}/tasks`, {
+                category_id,
+                title,
+                description,
+                order
+             })
+                .done(() => {
+                    boards.loadBoard(boardId);
+                    $('#createTaskModal').modal('hide');
+                });
+        });
+
+        // Edita as categorias|colunas
+        $('#editCategoryForm').on('submit', function (e) {
+            e.preventDefault();
+
+            const id = $('#editIdCategory').val();
+            const name = $('#editCategoryName').val();
+
+            $.ajax({
+                url: `/api/categories/${id}`,
+                method: 'PUT',
+                data: { name },
+                success: () => {
+                    boards.loadBoard(boardId);
+                    $('#editCategoryModal').modal('hide');
+                },
+                error: (xhr) => {
+                    alert('Erro ao atualizar a coluna');
+                    console.error(xhr.responseText);
+                }
+            })
         });
     }
 });
@@ -191,48 +279,59 @@ const boards = {
                 categories
             } = data;
 
+
+
             if (categories.length > 0) {
+                $('#kanbanBoardContainer').attr("data-next_order", categories.length);
+
+
                 const html = `
-                    <div class="container-fluid py-4 bg-light" style="background-color: #e2e8f0; min-height: 100vh;">
+                    <div class="container-fluid py-4" style="min-height: 100vh;">
                         <div class="d-flex flex-row flex-nowrap overflow-auto gap-3 px-2">
                             ${categories.map(category => {
-                                const columns = `
-                                    <div class="card shadow-lg flex-shrink-0 bg-white" style="width: 18rem; border-radius: 1rem; box-shadow: inset 0 0 20px rgba(0,0,0,0.05);">
-                                        <div class="card-header fw-bold text-center bg-light border-bottom">${category.name}</div>
+                                $('#createTaskForm').attr('data-order_task', category.tasks.length);
+
+                                return `
+                                    <div class="card shadow-lg flex-shrink-0 bg-white" style="width: 18rem; border-radius: 1rem;">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">${category.name}</h6>
+                                            <div class="dropdown">
+                                                <button class="btn btn-light btn-sm" type="button" id="dropdownMenuCategoriesButton${category.id}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <span class="material-symbols-outlined">more_vert</span>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuCategoriesButton${category.id}">
+                                                    <li>
+                                                        <button type="button" class="dropdown-item btn-edit-category" data-id_category="${category.id}" data-name_category="${category.name}">
+                                                            Editar
+                                                        </button>
+                                                    </li>
+                                                    <li>
+                                                        <button type="button" class="dropdown-item btn-delete-category" data-id_category="${category.id}">
+                                                            Excluir
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
                                         <div class="card-body p-2 task-list" style="max-height: 70vh; overflow-y: auto;" data-category-id="${category.id}">
-                                            ${category.tasks.map(task => {
-                                                const {
-                                                    id,
-                                                    title,
-                                                    description,
-                                                    created_at
-                                                } = task;
-
-                                                const taskDescription = task.description && task.description != null ? `<p class="text-muted small mb-0">${description}</p>` : '';
-
-                                                const htmlTask = `
-                                                    <div class="card mb-2 border-0 shadow-sm cursor-pointer transition-all duration-200" data-task-id="${id}">
+                                            ${category.tasks.map(task =>  `
+                                                    <div class="card mb-2 border-0 shadow-sm cursor-pointer transition-all duration-200" data-task-id="${task.id}">
                                                         <div class="card-body py-2 px-3">
-                                                            <h6 class="fw-semibold mb-1">${title}</h6>
-                                                            ${taskDescription}
+                                                            <h6 class="fw-semibold mb-1">${task.title}</h6>
+                                                            ${task.description && task.description != null ? `<p class="text-muted small mb-0">${task.description}</p>` : ''}
                                                         </div>
                                                     </div>
-                                                `;
-
-                                                return htmlTask;
-                                            })}
+                                                `
+                                            ).join('')}
                                         </div>
 
                                         <div class="card-footer bg-transparent border-top">
                                             <button class="btn btn-primary w-100 btn-sm rounded-pill btn-new-task" data-card-id="${category.id}">
-                                                + Adicionar card
+                                                + Adicionar tarefa
                                             </button>
                                         </div>
                                     </div>
-                                `;
-
-                                return columns;
-                            })}
+                                `}).join('')}
                         </div>
                     </div>
                 `;
@@ -245,31 +344,5 @@ const boards = {
             }
             console.log(data)
         });
-    },
-
-    renderBoard: (data) => {
-        console.log(data)
-            // const columns = data.columns || [];
-            // const html = `
-            //     <div class="flex items-center justify-between mb-4">
-            //     <h2 class="text-2xl font-semibold">${escapeHtml(data.board.name)}</h2>
-            //     <button id="btnAddColumn" class="bg-blue-600 text-white px-3 py-1 rounded text-sm" data-bs-toggle="modal" data-bs-target="#createColumnModal">+ Coluna</button>
-            //     </div>
-            //     <div class="flex gap-4 overflow-x-auto" id="kanbanColumnsRoot">
-            //     ${columns.map(col => `
-            //         <div class="bg-gray-50 rounded p-3 min-w-[250px] flex flex-col" data-column-id="${col.id}">
-            //         <div class="font-semibold mb-2">${escapeHtml(col.name)}</div>
-            //         <div class="kanban-tasks flex-1 mb-2" data-column-id="${col.id}">
-            //             ${col.tasks.map(t => `<div class="bg-white p-2 mb-2 rounded shadow-sm kanban-task" data-task-id="${t.id}">${escapeHtml(t.title)}</div>`).join('')}
-            //         </div>
-            //         <form class="createTaskForm" data-column-id="${col.id}">
-            //             <input type="text" class="taskTitle border rounded w-full text-sm p-1" placeholder="Nova task..." />
-            //         </form>
-            //         </div>
-            //     `).join('')}
-            //     </div>
-            // `;
-            // $('#kanbanBoardContainer').html(html);
-            // activateDrag();
     }
 }

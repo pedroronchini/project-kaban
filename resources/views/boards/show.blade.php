@@ -9,7 +9,7 @@
         </div>
     </x-slot>
 
-    <div id="kanbanBoardContainer" class="p-6 d-flex justify-center" data-board-id="{{ $board->id }}">
+    <div id="kanbanBoardContainer" class="p-6 d-flex justify-center" style="background-color: #767676;" data-board-id="{{ $board->id }}">
         <!-- Carregado via AJAX -->
     </div>
 
@@ -23,6 +23,79 @@
                 </div>
                 <div class="modal-body">
                     <input id="columnName" class="form-control" placeholder="Nome da coluna..." required />
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancelar</button>
+                    <button class="btn btn-primary" type="submit">Criar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal criar tarefa -->
+    <div class="modal fade" id="createTaskModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="createTaskForm" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Criar Tarefa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                     <div class="mb-3">
+                        <label for="taskTitle" class="form-label">Nome da tarefa</label>
+                        <input id="taskTitle" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea id="taskDescription" class="form-control"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancelar</button>
+                    <button class="btn btn-primary" type="submit">Criar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal editar categoria -->
+    <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="editCategoryForm" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Coluna</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editIdCategory">
+                    <input id="editCategoryName" class="form-control" placeholder="Nome da tarefa..." required />
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancelar</button>
+                    <button class="btn btn-primary" type="submit">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal editar tarefa -->
+    <div class="modal fade" id="editTaskModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="createTaskForm" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Tarefa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="idTaskEdit">
+                     <div class="mb-3">
+                        <label for="editTaskTitle" class="form-label">Nome da tarefa</label>
+                        <input id="editTaskTitle" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea id="editTaskDescription" class="form-control"></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancelar</button>

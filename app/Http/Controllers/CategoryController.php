@@ -66,8 +66,7 @@ class CategoryController extends Controller
             $category = Category::findOrFail($id);
 
             $validated = $request->validate([
-                'name' => 'required|string|max:100',
-                'order' => 'nullable|integer',
+                'name' => 'required|string|max:100'
             ]);
 
             $category->update($validated);
