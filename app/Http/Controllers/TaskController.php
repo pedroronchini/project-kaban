@@ -45,6 +45,18 @@ class TaskController extends Controller
         }
     }
 
+    public function show($id) {
+        try {
+            $task = Task::findOrFail($id);
+
+            return response()->json($task, 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Tarefa não encontrada'], 404);
+        } catch (Throwable $e) {
+            return response()->json(['error' => 'Erro ao buscar tarefa'], 500);
+        }
+    }
+
     public function update(Request $request, $id)
     {
         try {
@@ -53,7 +65,7 @@ class TaskController extends Controller
             $validated = $request->validate([
                 'title' => 'required|string|max:150',
                 'description' => 'nullable|string|max:1000',
-                'order' => 'nullable|integer',
+                'category_id' => 'nullable|integer',
             ]);
 
             $task->update($validated);

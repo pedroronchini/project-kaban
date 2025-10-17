@@ -41,7 +41,7 @@ $(function () {
                     alert('Erro ao excluir quadro');
                     console.error(xhr.responseText);
                 }
-            })
+            });
         })
         // Cria um quadro
         $('#createBoardForm').on('submit', function (e) {
@@ -105,17 +105,30 @@ $(function () {
         });
 
         // Abre o modal de editar a tarefa
-        $(document).on('click', '.btn-edit-task', function () {
-            const id = $(this).data('id_category');
-            const title = $(this).data('task_title');
-            const description = $(this).data('task_description');
+        $(document).on('click', '.task-item', function () {
+            const id = $(this).data('task-id');
 
+            boards.getCategories(boardId);
 
-            $('#idTaskEdit').val(id);
-            $('#editTaskTitle').val(title);
-            $('#editTaskDescription').val(description);
+            $.getJSON(`/api/tasks/${id}`, data => {
+                if (data) {
+                    const {
+                        id,
+                        title,
+                        description,
+                        category_id
+                    } = data;
 
-            $('#editTaskModal').modal('show');
+                    $('#taskId').val(id);
+                    $('#taskForm').find('input[name=taskTitle]').val(title);
+                    $('#taskForm').find('textarea[name=taskDescription]').val(description);
+                    $('#taskCategory').val(category_id);
+
+                    $('#taskModal').modal('show');
+                } else {
+                    alert('Ocorreu um erro ao carregar a tarefa');
+                }
+            });
         });
 
         // Abre o modal de editar a coluna|categoria
@@ -149,7 +162,24 @@ $(function () {
         });
 
         // Ao clicar em excluir tarefa abre o confirm
-        $(document).on('click', '', function () {});
+        $(document).on('click', '.btn-delete-task', function () {
+            if (!confirm('Tem certeza que deseja excluir esta tarefa?')) return;
+
+            const id = $('#taskId').val();
+
+            $.ajax({
+                url: `/api/tasks/${id}`,
+                method: 'DELETE',
+                success: () => {
+                    boards.loadBoard(boardId);
+                    $('#taskModal').modal('hide');
+                },
+                error: (xhr) => {
+                    alert('Erro ao excluir tarefa');
+                    console.error(xhr.responseText);
+                }
+            });
+        });
 
         // Cria as categorias|colunas
         $('#createColumnForm').on('submit', function (e) {
@@ -214,6 +244,34 @@ $(function () {
                 }
             })
         });
+
+        // Editar tarefa
+        $('#taskForm').on('submit', function (e) {
+            e.preventDefault();
+
+            const id = $('#taskId').val();
+            const title = $(this).find('input[name=taskTitle]').val();
+            const description = $(this).find('textarea[name=taskDescription]').val();
+            const category_id = $('#taskCategory').val();
+
+            $.ajax({
+                url: `/api/tasks/${id}`,
+                method: 'PUT',
+                data: {
+                    title,
+                    description,
+                    category_id
+                },
+                success: () => {
+                    boards.loadBoard(boardId);
+                    $('#taskModal').modal('hide');
+                },
+                error: (xhr) => {
+                    alert('Erro ao atualizar tarefa');
+                    console.error(xhr.responseText);
+                }
+            })
+        });
     }
 });
 
@@ -251,11 +309,11 @@ const boards = {
                             <a href="/boards/${id}" class="text-blue-600 hover:underline text-sm">Abrir quadro →</a>
 
                             <div class="mt-3">
-                                <button class="btn btn-sm btn-outline-secondary me-1 btn-edit-board" data-id="${id}" data-name="${name}" data-description="${description}" >
-                                    Editar
+                                <button class="btn btn-sm btn-outline-secondary me-1 btn-edit-board" data-id="${id}" data-name="${name}" data-description="${description}" title="Editar" >
+                                    <span class="material-symbols-outlined">edit</span>
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger btn-delete-board" data-id="${id}">
-                                    Excluir
+                                <button class="btn btn-sm btn-outline-danger btn-delete-board" data-id="${id}" title="Excluir">
+                                    <span class="material-symbols-outlined">delete</span>
                                 </button>
                             </div>
                         </div>
@@ -315,7 +373,7 @@ const boards = {
                                         </div>
                                         <div class="card-body p-2 task-list" style="max-height: 70vh; overflow-y: auto;" data-category-id="${category.id}">
                                             ${category.tasks.map(task =>  `
-                                                    <div class="card mb-2 border-0 shadow-sm cursor-pointer transition-all duration-200" data-task-id="${task.id}">
+                                                    <div class="card mb-2 border-0 shadow-sm cursor-pointer transition-all duration-200 task-item" data-task-id="${task.id}">
                                                         <div class="card-body py-2 px-3">
                                                             <h6 class="fw-semibold mb-1">${task.title}</h6>
                                                             ${task.description && task.description != null ? `<p class="text-muted small mb-0">${task.description}</p>` : ''}
@@ -342,7 +400,23 @@ const boards = {
                 $('#kanbanBoardContainer').html('<p class="text-gray-500 p-4">Nenhuma categoria encontrada</p>');
                 $('#kanbanBoardContainer').attr("data-next_order", 0);
             }
-            console.log(data)
+        });
+    },
+
+    getCategories: (boardId) => {
+        $.getJSON(`/api/boards/${boardId}/categories`, data => {
+            let html = '';
+
+            data.forEach(category => {
+                const {
+                    id,
+                    name
+                } = category;
+
+                html += `<option value="${id}">${name}</option>`;
+            });
+
+            $('#taskCategory').html(html);
         });
     }
 }
